@@ -23,28 +23,28 @@ local BlockFamilySharingMessage = "This server blocked using shared accounts."
 --
 
 hook.Add("SAM.AuthedPlayer", "CheckSteamFamily", function(ply)
-    local ply_steamid = ply:SteamID()
+	local ply_steamid = ply:SteamID()
 	http.Fetch(string.format("http://api.steampowered.com/IPlayerService/IsPlayingSharedGame/v0001/?key=%s&format=json&steamid=%s&appid_playing=4000", SteamAPI_Key, ply:SteamID64()), function(body)
-        body = util.JSONToTable(body)
+		body = util.JSONToTable(body)
 
-        if not body or not body.response or not body.response.lender_steamid then
-            sam.print(Color(255, 0, 0), "Invalid Steam API Key to check for steam family sharing check.")
-            debug.Trace()
-            return
-        end
+		if not body or not body.response or not body.response.lender_steamid then
+			sam.print(Color(255, 0, 0), "Invalid Steam API Key to check for steam family sharing check.")
+			debug.Trace()
+			return
+		end
 
-        local lender = body.response.lender_steamid
-        if lender == "0" then return end
+		local lender = body.response.lender_steamid
+		if lender == "0" then return end
 
-        if BlockFamilySharing then
-            ply:Kick(BlockFamilySharingMessage)
-        else
-            lender = util.SteamIDFrom64(lender)
-            sam.player.is_banned(lender, function(banned)
-                if banned then
+		if BlockFamilySharing then
+			ply:Kick(BlockFamilySharingMessage)
+		else
+			lender = util.SteamIDFrom64(lender)
+			sam.player.is_banned(lender, function(banned)
+				if banned then
 					RunConsoleCommand("sam", "banid", ply_steamid, "0", BanMessage:format(lender))
-                end
-            end)
-        end
-    end)
+				end
+			end)
+		end
+	end)
 end)
