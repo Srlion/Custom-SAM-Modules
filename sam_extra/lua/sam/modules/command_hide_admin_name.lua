@@ -14,24 +14,22 @@ if SERVER then
 			return sam.player.old_send_message(ply, msg, tbl)
 		end
 
+		local admin = tbl["A"]
+		if not admin or admin == sam.console then
+			return sam.player.old_send_message(ply, msg, tbl)
+		end
+
 		msg = sam.language.get(msg) or msg
 
 		local admins, players = {}, {}
 		for _, v in ipairs(player.GetAll()) do
-			table.insert(v:HasPermission("see_hidden_admin_name") and admins or players, v)
+			table.insert((v:HasPermission("see_hidden_admin_name") or v == admin) and admins or players, v)
 		end
 
 		sam.player.old_send_message(admins, msg, tbl)
 
-		msg = msg:gsub("%{A%}", function()
-			local admin = tbl["A"]
-			if admin == sam.console then
-				return "{A}"
-			end
-			tbl["A"] = "Someone"
-			return "*{A}"
-		end, 1)
+		tbl["A"] = "Someone"
 
-		sam.player.old_send_message(players, msg, tbl)
+		sam.player.old_send_message(players, msg:gsub("%{A%}", "*{A}", 1), tbl)
 	end
 end
