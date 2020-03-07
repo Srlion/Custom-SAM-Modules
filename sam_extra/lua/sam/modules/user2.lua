@@ -477,7 +477,9 @@ do
 			]], {ply:SteamID(), rank})
 		end
 
-		data.secondary_rank, data.secondary_expiry_date = nil, nil
+		if data then
+			data.secondary_rank, data.secondary_expiry_date = nil, nil
+		end
 
 		if data and data.rank == "" then
 			data = nil
