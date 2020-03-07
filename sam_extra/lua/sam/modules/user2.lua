@@ -382,7 +382,7 @@ do
 			error("invalid rank")
 		end
 
-		local promise = Promise.new()
+		local promise = sam.Promise.new()
 
 		do
 			local ply = player.GetBySteamID(steamid)
