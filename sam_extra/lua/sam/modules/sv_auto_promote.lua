@@ -45,9 +45,6 @@ local promote_ranks = {
 --
 --
 
-table.insert(promote_ranks, 1, 0)
-table.insert(promote_ranks, 1, starting_rank)
-
 local ranks_count = #promote_ranks
 
 for i = 2, ranks_count, 2 do
@@ -55,11 +52,16 @@ for i = 2, ranks_count, 2 do
 end
 
 local can_promote = function(ply_rank)
+	if ply_rank == starting_rank then
+		return true
+	end
+
 	for i = 1, ranks_count - 2, 2 do
 		if ply_rank == promote_ranks[i] then
 			return true
 		end
 	end
+
 	return false
 end
 
