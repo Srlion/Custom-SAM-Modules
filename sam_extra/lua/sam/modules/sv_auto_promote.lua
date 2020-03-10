@@ -47,7 +47,7 @@ local promote_ranks = {
 
 local ranks_count = #promote_ranks
 
-for i = 2, ranks_count, 2 do
+for i = 1, ranks_count, 2 do
 	promote_ranks[i] = sam.parse_length(promote_ranks[i]) * 60
 end
 
