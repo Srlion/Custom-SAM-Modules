@@ -63,6 +63,7 @@ local can_promote = function(ply_rank)
 	return false
 end
 
+local math = math
 local get_promote_rank = function(ply)
 	local ply_rank = ply:GetUserGroup()
 	local play_time = math.floor(ply:sam_get_play_time())
@@ -87,6 +88,7 @@ local get_promote_rank = function(ply)
 	return promote_rank
 end
 
+local player = player
 hook.Add("SAM.UpdatedPlayTimes", "AutoPromote", function()
 	local players = player.GetHumans()
 	for i = 1, #players do
