@@ -2,7 +2,7 @@
 -- Permission is "reserved_slots". (By default admin+ has it.)
 --=--=
 
--- if SAM_LOADED then return end
+if SAM_LOADED then return end
 
 --
 -- Amount of reserved slots
