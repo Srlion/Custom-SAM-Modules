@@ -1,6 +1,7 @@
 --
 -- This hides admins names when running commands
 -- eg. *Someone slapped everyone.
+-- permission is see_hidden_admin_name. (by default admin+ has it)
 -- You can NOT use this with 'command_notify_for_ranks.lua'
 --
 if SAM_LOADED then return end
