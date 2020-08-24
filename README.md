@@ -1,5 +1,7 @@
 # Custom-SAM-Modules
 
+### MAKE SURE TO READ EVERY MODULE (FILE) BEFORE INSTALLING IT
+
 - [Hide admin names when running commands.](https://github.com/Srlion/Custom-SAM-Modules/blob/master/sam_extra/lua/sam/modules/command_hide_admin_name.lua)
     - Permission is `see_hidden_admin_name` by default admin+ has it.
 - [Make command notifying only for groups you select.](https://github.com/Srlion/Custom-SAM-Modules/blob/master/sam_extra/lua/sam/modules/command_notify_for_ranks.lua)
