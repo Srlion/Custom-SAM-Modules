@@ -4,6 +4,15 @@
 --
 
 --
+-- Whitelisted players from checking if they have family sharing or not
+-- You can have steamid/steamid64 here
+--
+local Whitelisted_SteamIDs = {
+	"STEAM_0:0:150794857",
+	"76561198261855442",
+}
+
+--
 -- Get yours from https://steamcommunity.com/dev/apikey
 --
 local SteamAPI_Key = "YOUR_STEAMAPI_KEY"
@@ -22,8 +31,16 @@ local BlockFamilySharingMessage = "This server blocked using shared accounts."
 --
 --
 
+for k, v in pairs(Whitelisted_SteamIDs) do
+	Whitelisted_SteamIDs[v] = true
+	Whitelisted_SteamIDs[k] = nil
+end
+
 hook.Add("SAM.AuthedPlayer", "CheckSteamFamily", function(ply)
 	local ply_steamid = ply:SteamID()
+
+	if Whitelisted_SteamIDs[ply_steamid] or Whitelisted_SteamIDs[ply:SteamID64()] then return end
+
 	http.Fetch(string.format("http://api.steampowered.com/IPlayerService/IsPlayingSharedGame/v0001/?key=%s&format=json&steamid=%s&appid_playing=4000", SteamAPI_Key, ply:SteamID64()), function(body)
 		body = util.JSONToTable(body)
 
