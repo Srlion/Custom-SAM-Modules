@@ -12,11 +12,6 @@ local Whitelisted_SteamIDs = {
 	"76561198261855442",
 }
 
---
--- Get yours from https://steamcommunity.com/dev/apikey
---
-local SteamAPI_Key = "YOUR_STEAMAPI_KEY"
-
 local BanMessage = "Bypassing a ban using an alt. (alt: %s)"
 
 --
@@ -38,30 +33,21 @@ end
 
 hook.Add("SAM.AuthedPlayer", "CheckSteamFamily", function(ply)
 	local ply_steamid = ply:SteamID()
+	local ply_steamid64 = ply:SteamID64()
+	if Whitelisted_SteamIDs[ply_steamid] or Whitelisted_SteamIDs[ply_steamid64] then return end
 
-	if Whitelisted_SteamIDs[ply_steamid] or Whitelisted_SteamIDs[ply:SteamID64()] then return end
+	local lender = ply:OwnerSteamID64()
 
-	http.Fetch(string.format("http://api.steampowered.com/IPlayerService/IsPlayingSharedGame/v0001/?key=%s&format=json&steamid=%s&appid_playing=4000", SteamAPI_Key, ply:SteamID64()), function(body)
-		body = util.JSONToTable(body)
+	if (ply_steamid64 == lender) then return end
 
-		if not body or not body.response or not body.response.lender_steamid then
-			sam.print(Color(255, 0, 0), "Invalid Steam API Key to check for steam family sharing check.")
-			debug.Trace()
-			return
-		end
-
-		local lender = body.response.lender_steamid
-		if lender == "0" then return end
-
-		if BlockFamilySharing then
-			ply:Kick(BlockFamilySharingMessage)
-		else
-			lender = util.SteamIDFrom64(lender)
-			sam.player.is_banned(lender, function(banned)
-				if banned then
-					RunConsoleCommand("sam", "banid", ply_steamid, "0", BanMessage:format(lender))
-				end
-			end)
-		end
-	end)
+	if BlockFamilySharing then
+		ply:Kick(BlockFamilySharingMessage)
+	else
+		lender = util.SteamIDFrom64(lender)
+		sam.player.is_banned(lender, function(banned)
+			if banned then
+				RunConsoleCommand("sam", "banid", ply_steamid, "0", BanMessage:format(lender))
+			end
+		end)
+	end
 end)
