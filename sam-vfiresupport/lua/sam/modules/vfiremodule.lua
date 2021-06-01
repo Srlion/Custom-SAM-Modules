@@ -1,4 +1,4 @@
-sam.command.set_category("Vfire") -- any new command will be in that category unless the command uses :SetCategory function
+sam.command.set_category("Vfire")
 
 sam.command.new("extinguish"):SetPermission("extinguish", "admin"):DisallowConsole():Help("Extinguish the fire you look at!"):MenuHide(false):DisableNotify(true):OnExecute(function(calling_ply)
     local lookedAt = ents.FindInCone(calling_ply:EyePos(), calling_ply:EyeAngles():Forward(), 30000, 0.9)
