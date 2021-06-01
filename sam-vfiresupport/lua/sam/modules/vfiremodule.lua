@@ -1,4 +1,4 @@
-sam.command.set_category("MK") -- any new command will be in that category unless the command uses :SetCategory function
+sam.command.set_category("Vfire") -- any new command will be in that category unless the command uses :SetCategory function
 
 sam.command.new("extinguish"):SetPermission("extinguish", "admin"):DisallowConsole():Help("Extinguish the fire you look at!"):MenuHide(false):DisableNotify(true):OnExecute(function(calling_ply)
     local lookedAt = ents.FindInCone(calling_ply:EyePos(), calling_ply:EyeAngles():Forward(), 30000, 0.9)
@@ -13,12 +13,12 @@ sam.command.new("extinguish"):SetPermission("extinguish", "admin"):DisallowConso
         end
     end
 
-    sam.player.send_message(calling_ply, "{A} fire extinguished!", {
+    sam.player.send_message(calling_ply, "{A} fires extinguished!", {
         A = removeCount
     })
 end):End()
 
-sam.command.new("extinguishall"):SetPermission("extinguishall", "admin"):Help("Löscht alle Feuer!"):MenuHide(false):DisableNotify(true):OnExecute(function(calling_ply)
+sam.command.new("extinguishall"):SetPermission("extinguishall", "admin"):Help("Extinguishes all vfires on the map"):MenuHide(false):DisableNotify(true):OnExecute(function(calling_ply)
     local removeCount = 0
 
     for k, v in pairs(ents.FindByClass("vfire" or class == "vfire_ball")) do
@@ -26,7 +26,7 @@ sam.command.new("extinguishall"):SetPermission("extinguishall", "admin"):Help("L
         removeCount = removeCount + 1
     end
 
-    sam.player.send_message(calling_ply, "All fire ( {A} ) extinguished!", {
+    sam.player.send_message(calling_ply, "All {A} fires  extinguished!", {
         A = removeCount
     })
 end):End()
