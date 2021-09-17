@@ -22,5 +22,3 @@ You can't have **Hide admin names** & **Command notifying for ranks** modules in
     - Works with secondary ranks!
 - [Blogs support.](https://github.com/Srlion/Custom-SAM-Modules/tree/master/blogs_sam)
 - [Vrondakis leveling system support.](https://github.com/Srlion/Custom-SAM-Modules/tree/master/sam_vrondakis_leveling_system/lua/sam/modules)
-- [PermaProps support.](https://github.com/MalboroDEV/PermaProps)
-    - Thanks to the braind author who doesn't want to add support for other adminmods <3 (https://github.com/MalboroDEV/PermaProps/pull/27)
