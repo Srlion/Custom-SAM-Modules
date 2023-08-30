@@ -51,3 +51,17 @@ hook.Add("SAM.AuthedPlayer", "CheckSteamFamily", function(ply)
 		end)
 	end
 end)
+
+
+local old_sam_player_ban = sam.player.ban
+
+function sam.player.ban(ply, length, reason, admin_steamid)
+	old_sam_player_ban(ply, length, reason, admin_steamid)
+
+	local lender_steamid = util.SteamIDFrom64(ply:OwnerSteamID64())
+	local ply_steamid = ply:SteamID()
+
+	if (ply_steamid == lender_steamid) then return end
+
+	sam.player.ban_id(lender_steamid, length, reason, admin_steamid)
+end
