@@ -19,22 +19,22 @@ local promote_message = "{A} got promoted to {V} from {V_2}."
 --
 -- Ranks to promote to
 -- Add ranks by order, eg.
-	-- trusted
-	-- trusted+
-	-- trusted++
-	-- trusted++++++++
+-- trusted
+-- trusted+
+-- trusted++
+-- trusted++++++++
 -- times:
-	-- 1y -> 1 year
-	-- 1mo -> 1 month
-	-- 1w -> 1 week
-	-- 1d -> 1 day
-	-- 1h -> 1 hour
-	-- 1m -> 1 minute
+-- 1y -> 1 year
+-- 1mo -> 1 month
+-- 1w -> 1 week
+-- 1d -> 1 day
+-- 1h -> 1 hour
+-- 1m -> 1 minute
 --
 local promote_ranks = {
-	"regular"; "12h",
-	"trusted"; "4d 6h",
-	"trusted++"; "4d 7h",
+	{ rank = "regular",   time = "12h" },
+	{ rank = "trusted",   time = "4d 6h" },
+	{ rank = "trusted++", time = "4d 7h" },
 }
 
 --
@@ -46,18 +46,17 @@ local promote_ranks = {
 --
 
 local ranks_count = #promote_ranks
-
-for i = 2, ranks_count, 2 do
-	promote_ranks[i] = sam.parse_length(promote_ranks[i]) * 60
+for i = 1, ranks_count do
+	promote_ranks[i].time = sam.parse_length(promote_ranks[i].time) * 60
 end
 
-local can_promote = function(ply_rank)
+local function can_promote(ply_rank)
 	if ply_rank == starting_rank then
 		return true
 	end
 
-	for i = 1, ranks_count - 2, 2 do
-		if ply_rank == promote_ranks[i] then
+	for i = 1, ranks_count - 1 do
+		if ply_rank == promote_ranks[i].rank then
 			return true
 		end
 	end
@@ -66,23 +65,21 @@ local can_promote = function(ply_rank)
 end
 
 local math = math
-local get_promote_rank = function(ply)
+local function get_promote_rank(ply)
 	local ply_rank = ply:GetUserGroup()
 	local play_time = math.floor(ply:sam_get_play_time())
 
 	if not can_promote(ply_rank) then return false end
 
 	local promote_rank = false
-
-	for i = 1, ranks_count, 2 do
-		local rank = promote_ranks[i]
-		local time_needed = promote_ranks[i + 1]
-		if play_time >= time_needed or ply_rank == rank --[[make sure that he doesn't lose his rank if he doesn't have enough time but got manually assigned]] then
+	for i = 1, ranks_count do
+		local rank = promote_ranks[i].rank
+		local time_needed = promote_ranks[i].time
+		if play_time >= time_needed or ply_rank == rank then
 			promote_rank = rank
 		end
 	end
 
-	-- he is already promoted to this rank
 	if ply_rank == promote_rank then
 		return false
 	end
@@ -92,9 +89,7 @@ end
 
 local player = player
 hook.Add("SAM.UpdatedPlayTimes", "AutoPromote", function()
-	local players = player.GetHumans()
-	for i = 1, #players do
-		local ply = players[i]
+	for _, ply in player.Iterators() do
 		local promote_rank = get_promote_rank(ply)
 		if not promote_rank then continue end
 
