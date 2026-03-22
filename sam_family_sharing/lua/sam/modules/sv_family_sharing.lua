@@ -26,10 +26,11 @@ local BlockFamilySharingMessage = "This server blocked using shared accounts."
 --
 --
 
-for k, v in pairs(Whitelisted_SteamIDs) do
-	Whitelisted_SteamIDs[v] = true
-	Whitelisted_SteamIDs[k] = nil
+local whitelist_lookup = {}
+for _, v in ipairs(Whitelisted_SteamIDs) do
+	whitelist_lookup[v] = true
 end
+Whitelisted_SteamIDs = whitelist_lookup
 
 hook.Add("SAM.AuthedPlayer", "CheckSteamFamily", function(ply)
 	local ply_steamid = ply:SteamID()
