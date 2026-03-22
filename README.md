@@ -21,6 +21,5 @@ You can't have **Hide admin names** & **Command notifying for ranks** modules in
 - [Simple auto promote.](https://github.com/Srlion/Custom-SAM-Modules/tree/master/sam_auto_promote/lua/sam/modules)
 - [Reserved slots.](https://github.com/Srlion/Custom-SAM-Modules/tree/master/sam_reserved_slots/lua/sam/modules)
   - Permission is `reserved_slots` by default admin+ has it.
-  - Works with secondary ranks!
 - [Blogs support.](https://github.com/Srlion/Custom-SAM-Modules/tree/master/blogs_sam)
 - [Vrondakis leveling system support.](https://github.com/Srlion/Custom-SAM-Modules/tree/master/sam_vrondakis_leveling_system/lua/sam/modules)

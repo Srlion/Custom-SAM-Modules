@@ -16,12 +16,6 @@ local reserved_slots = 5
 --
 local hide_reserved_slots = true
 
---
--- Kick a player with shortest session time if the server is full to free a slot for players with reserved slots access? (Won't kick players with reserved slots access.)
--- I really really really really don't recommend this option for your server.
---
-local kick_if_full = true
-
 --=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=
 --=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=
 
@@ -33,12 +27,6 @@ local kick_if_full = true
 --
 local reserved_message = "Left slots are reserved, sorry"
 
---
--- Only used when "kick_if_full" is set to "true"
--- What's the message that players will get when they kicked for freeing a slot?
---
-local kick_message = "Freeing slot. Sorry, you had the shortest session time"
-
 --=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=
 --=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=
 -- DO NOT TOUCH
@@ -46,6 +34,7 @@ local kick_message = "Freeing slot. Sorry, you had the shortest session time"
 --=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=
 
 local sam = sam
+local SQL = sam.SQL
 
 sam.permissions.add("reserved_slots", nil, "admin")
 
@@ -57,127 +46,92 @@ if hide_reserved_slots then
 	RunConsoleCommand("sv_visiblemaxplayers", max_slots - reserved_slots)
 end
 
-local has_reserved_access; do
-	local cached_ranks; do
-		local fn = hook.GetTable()["SAM.ChangedSteamIDRank"]["RemoveIfCached"]
-		cached_ranks = select(2, debug.getupvalue(fn, 1))
+local has_permission = sam.ranks.has_permission
+local player = player
+
+-- Rank cache: steamid -> rank string
+local rank_cache = {}
+
+local function get_rank_from_data(data)
+	if data and data.rank and data.rank ~= "NULL" then
+		return data.rank
 	end
-
-	local use_secondary_ranks = sam.player.set_secondary_rank and true or false
-
-	local query
-	if use_secondary_ranks then
-		query = [[
-			SELECT
-				`sam_players`.`rank`,
-				`sam_players_secondary`.`rank` AS `secondary_rank`
-			FROM
-				`sam_players`
-			LEFT OUTER JOIN
-				`sam_players_secondary`
-			ON
-				`sam_players`.`steamid` = `sam_players_secondary`.`steamid`
-			WHERE
-				`sam_players`.`steamid` = {1}
-		]]
-	else
-		query = [[
-			SELECT
-				`rank`
-			FROM
-				`sam_players`
-			WHERE
-				`steamid` = {1}
-		]]
-	end
-
-	local has_permission = sam.ranks.has_permission
-	local internal_has_access = function(data, steamid, callback)
-		local rank, secondary_rank = "user", "user"
-		if data then
-			rank, secondary_rank = data.rank, data.secondary_rank
-			if rank == "NULL" then
-				rank = "user"
-			end
-			if secondary_rank == "NULL" then
-				secondary_rank = "user"
-			end
-		end
-
-		cached_ranks[steamid] = data ~= nil and data or false
-
-		return callback(has_permission(rank, "reserved_slots") or has_permission(secondary_rank, "reserved_slots"))
-	end
-
-	function has_reserved_access(steamid, callback)
-		local cache = cached_ranks[steamid]
-		if cache then
-			return internal_has_access(cache, steamid, callback)
-		elseif cache == false then
-			return callback(has_permission("user", "reserved_slots"))
-		end
-
-		local has_access, msg = false, nil
-		sam.SQL.FQuery(query, {steamid}, function(data)
-			has_access, msg = internal_has_access(data, steamid, callback)
-		end, true)
-
-		return has_access, msg
-	end
+	return "user"
 end
 
-local math = math
-local player = player
+-- Cache invalidation via SAM hooks
+
+local function invalidate_cache()
+	rank_cache = {}
+end
+
+hook.Add("SAM.ChangedPlayerRank", "SAM.ReservedSlots.Cache", invalidate_cache)
+hook.Add("SAM.ChangedSteamIDRank", "SAM.ReservedSlots.Cache", invalidate_cache)
+hook.Add("SAM.OnRankRemove", "SAM.ReservedSlots.Cache", invalidate_cache)
+hook.Add("SAM.RankNameChanged", "SAM.ReservedSlots.Cache", invalidate_cache)
+timer.Create("SAM.ReservedSlots.CacheClear", 300, 0, invalidate_cache) -- Clear cache every 5 minutes just in case
+
+local query = [[
+	SELECT
+		`rank`
+	FROM
+		`sam_players`
+	WHERE
+		`steamid` = {1}
+]]
+
+local function has_reserved_access(steamid, callback)
+	local cached = rank_cache[steamid]
+	if cached then
+		callback(has_permission(cached, "reserved_slots"))
+		return
+	end
+
+	SQL.FQuery(query, { steamid }, function(data)
+		local rank = get_rank_from_data(data)
+		rank_cache[steamid] = rank
+		callback(has_permission(rank, "reserved_slots"))
+	end, true)
+end
 
 timer.Simple(0, function()
 	local GM = GM or GAMEMODE
 
-	GM.OldCheckPassword = GM.OldCheckPassword or GM.CheckPassword
-
-	function GM:CheckPassword(steamid64, ...)
-		if GM:OldCheckPassword(steamid64, ...) == false then
-			return false
+	sam.hook_last("CheckPassword", "SAM.ReservedSlots", function(steamid64, ...)
+		local OldCheckPassword = GM and GM.CheckPassword
+		if OldCheckPassword then
+			local allowed, msg = OldCheckPassword(GM, steamid64, ...)
+			if allowed == false then
+				return false, msg
+			end
 		end
 
-		local use_kick = false
-
 		local steamid = util.SteamIDFrom64(steamid64)
-		local bool, msg = has_reserved_access(steamid, function(has_access)
-			local left_slots = max_slots - player.GetCount()
-			if left_slots == 0 then return end
+		local left_slots = max_slots - player.GetCount()
 
-			if not has_access and left_slots <= reserved_slots then
-				if use_kick then
-					sam.player.kick_id(steamid, reserved_message)
-				end
-				return false, reserved_message .. "."
-			end
+		if left_slots <= 0 then
+			return false, reserved_message .. "."
+		end
 
-			if not kick_if_full then return end
-			if left_slots - 1 > 0 then return end
-
-			local chosen_player
-			local shortest_time = math.huge
-
-			local players = player.GetAll()
-			for i = 1, #players do
-				local ply = players[i]
-				if not ply:HasPermission("reserved_slots") then
-					local session_time = ply:sam_get_nwvar("is_authed") and ply:sam_get_session_time() or -1
-					if session_time < shortest_time then
-						chosen_player = ply
-						shortest_time = session_time
+		if left_slots <= reserved_slots then
+			if SQL.IsMySQL() then
+				has_reserved_access(steamid, function(allowed)
+					if not allowed then
+						sam.player.kick_id(steamid, reserved_message)
 					end
+				end)
+			else
+				local has_access = false
+				has_reserved_access(steamid, function(allowed)
+					has_access = allowed
+				end)
+
+				if not has_access then
+					return false, reserved_message .. "."
 				end
 			end
+		end
 
-			if chosen_player then
-				chosen_player:Kick(kick_message)
-			end
-		end)
-
-		use_kick = true
-
-		return bool, msg
-	end
+		return true
+	end)
 end)
